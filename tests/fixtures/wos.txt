@@ -1,0 +1,4 @@
+PT	AU	AF	TI	SO	LA	DE	AB	C1	TC	PY	DI
+J	Silva, A; Souza, B	Silva, Ana; Souza, Bruno	Geosites assessment in Portugal	GEOHERITAGE	English	geosites; assessment	Abstract one	[Silva, Ana; Souza, Bruno] Univ Lisbon, Lisbon, Portugal	10	2018	10.1/wos1
+J	X, Y; Z	Xavier, Yara; Zago, Zeca	Paleontological heritage	GEOSCIENCES	Portuguese	paleontology	Resumo dois	[Xavier, Yara] Univ Fed Rio, Rio, Brazil; [Zago, Zeca] Univ Porto, Porto, Portugal		2020	
+J	Brilha, J	Brilha, Jose	Geoheritage and geoconservation: a review	GEOHERITAGE	English	geoheritage	Review of the field.	[Brilha, Jose] Univ Oxford, Oxford, England	200	2016	10.1007/S12371-016-0001-1
