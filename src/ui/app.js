@@ -2,7 +2,9 @@ import { createStore, memoryAdapter } from '../store.js';
 import { artifactDbAdapter } from './db-adapter.js';
 import { aplicarFiltros, filtrosVazios } from '../filters.js';
 import { proporcaoCodificada } from '../coding.js';
-import { setNomesAtlas } from '../geo.js';
+import { setNomesAtlas, paisesCanonicos } from '../geo.js';
+import { importarEstudos } from '../importar.js';
+import { topContagem } from '../metrics.js';
 import { MUNDO } from './mundo.generated.js';
 import { h, limpar, numero } from './dom.js';
 import { render as producao } from './producao.js';
@@ -57,6 +59,12 @@ const acoes = {
   mensagemErro,
   podeEscrever: () => estado.podeEscrever,
   estudos: () => estado.estudos,
+  async importar(novos) {
+    const r = await importarEstudos(store, novos);
+    estado.estudos = r.resultado;
+    desenharStatus();
+    return r;
+  },
   modo: () => estado.modo,
   async salvarEstudos(lista) {
     await store.saveEstudos(lista);
@@ -146,9 +154,9 @@ function opcoesDeFiltro(chave) {
     case 'tiposSitio': return nomes('tiposSitio');
     case 'metodos': return nomes('metodosAvaliacao');
     case 'problematicas': return nomes('problematicas');
-    case 'paises': return contar(estado.estudos.flatMap((e) => e.paises)).sort((a, b) => a.localeCompare(b));
+    case 'paises': return contar(estado.estudos.flatMap((e) => paisesCanonicos(e.paises))).sort((a, b) => a.localeCompare(b));
     case 'autores': return contar(estado.estudos.flatMap((e) => e.autores));
-    case 'periodicos': return contar(estado.estudos.map((e) => e.periodico));
+    case 'periodicos': return topContagem(estado.estudos, 'periodico', 300).map((p) => p.nome).filter((nome) => nome !== 'não informado');
     case 'idiomas': return contar(estado.estudos.map((e) => e.idioma));
     default: return [];
   }

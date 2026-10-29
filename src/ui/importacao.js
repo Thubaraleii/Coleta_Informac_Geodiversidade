@@ -1,6 +1,5 @@
 import { h, limpar, numero, adicionar } from './dom.js';
 import { parseFile } from '../parsers/index.js';
-import { mergeEstudos } from '../dedupe.js';
 
 const NOMES_BASE = { scopus: 'Scopus', wos: 'Web of Science', bibtex: 'BibTeX', ris: 'RIS' };
 
@@ -23,7 +22,8 @@ export function render(container, ctx) {
   const input = h('input', { type: 'file', id: 'arquivos', multiple: true, accept: '.csv,.txt,.tsv,.bib,.ris' });
   const botao = h('button', { class: 'primario', type: 'button', disabled: !acoes.podeEscrever() }, 'Importar arquivos');
   const linha = (texto, tipo) => h('div', { class: tipo === 'bad' ? 'aviso' : 'painel' }, texto);
-  let atualizarBase = () => {};
+  const caixaBase = h('div');
+  const desenharBase = () => limpar(caixaBase).append(resumoDaBase(acoes.estudos()));
 
   botao.addEventListener('click', async () => {
     const arquivos = [...input.files];
@@ -33,34 +33,26 @@ export function render(container, ctx) {
       return;
     }
     botao.disabled = true;
-    let atual = acoes.estudos();
-    let mudou = false;
     for (const arquivo of arquivos) {
+      let lido;
       try {
-        const { format, estudos } = parseFile(await arquivo.text(), arquivo.name);
-        const r = mergeEstudos(atual, estudos);
-        atual = r.resultado;
-        mudou = mudou || r.adicionados > 0;
-        saida.append(linha(`${arquivo.name} (${NOMES_BASE[format]}): ${numero(estudos.length)} lidos, ${numero(r.adicionados)} novos, ${numero(r.duplicados)} duplicados.`, 'ok'));
+        lido = parseFile(await arquivo.text(), arquivo.name);
       } catch (e) {
         saida.append(linha(`${arquivo.name}: ${e.message}. Este arquivo não alterou a base.`, 'bad'));
+        continue;
       }
-    }
-    if (mudou) {
       try {
-        await acoes.salvarEstudos(atual);
-        saida.append(linha('Base atualizada e salva.', 'ok'));
+        const r = await acoes.importar(lido.estudos);
+        const extra = r.alterados > 0 ? `, ${numero(r.alterados)} atualizados com dados desta base` : '';
+        saida.append(linha(`${arquivo.name} (${NOMES_BASE[lido.format]}): ${numero(lido.estudos.length)} lidos, ${numero(r.adicionados)} novos, ${numero(r.duplicados)} duplicados${extra}.`, 'ok'));
       } catch (e) {
-        saida.append(linha(`Não foi possível salvar: ${acoes.mensagemErro(e)}`, 'bad'));
+        saida.append(linha(`${arquivo.name}: não foi possível salvar (${acoes.mensagemErro(e)}).`, 'bad'));
       }
-    } else {
-      saida.append(linha('Nenhum estudo novo; a base ficou como estava.', 'ok'));
     }
-    atualizarBase();
+    desenharBase();
     botao.disabled = !acoes.podeEscrever();
   });
 
-  const caixaBase = h('div');
   adicionar(
     container,
     h('h2', null, 'Importação'),
@@ -70,7 +62,5 @@ export function render(container, ctx) {
     h('div', { class: 'painel pilha' }, h('label', { class: 'campo', for: 'arquivos' }, 'Arquivos de exportação', input), h('div', { class: 'acoes' }, botao), saida),
     h('div', { class: 'painel' }, h('h3', null, 'Base atual'), caixaBase),
   );
-  const desenharBase = () => limpar(caixaBase).append(resumoDaBase(acoes.estudos()));
   desenharBase();
-  atualizarBase = desenharBase;
 }

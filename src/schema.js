@@ -9,13 +9,15 @@ const IDIOMAS = {
 
 export function normalizeDoi(raw) {
   if (raw == null) return null;
-  const limpo = String(raw)
-    .trim()
-    .toLowerCase()
-    .replace(/^(https?:\/\/(dx\.)?doi\.org\/|doi:\s*)/, '')
-    .trim();
+  const texto = String(raw).trim().toLowerCase();
+  if (texto === '') return null;
+  const achado = /10\.\d+(?:\.\d+)*\/\S+/.exec(texto);
+  const limpo = (achado ? achado[0] : texto).replace(/[.,;]+$/, '').trim();
   return limpo === '' ? null : limpo;
 }
+
+/** Um registro sem título e sem DOI é lixo de exportação (linha vazia, por exemplo). */
+export const registroValido = (estudo) => estudo.titulo !== '' || estudo.doi !== null;
 
 export function normalizeTitle(raw) {
   return String(raw ?? '')

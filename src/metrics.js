@@ -1,3 +1,5 @@
+import { normalizeTitle } from './schema.js';
+
 const NAO_INFORMADO = 'não informado';
 
 export function producaoPorAno(estudos) {
@@ -15,12 +17,19 @@ function valoresDe(estudo, campo) {
 }
 
 export function topContagem(estudos, campo, n) {
-  const contagem = new Map();
+  const grupos = new Map();
   for (const e of estudos) {
-    for (const valor of new Set(valoresDe(e, campo))) contagem.set(valor, (contagem.get(valor) ?? 0) + 1);
+    for (const valor of new Set(valoresDe(e, campo))) {
+      const chave = campo === 'periodico' && valor !== NAO_INFORMADO ? normalizeTitle(valor) || valor : valor;
+      const grupo = grupos.get(chave) ?? { total: 0, formas: new Map() };
+      grupo.total++;
+      grupo.formas.set(valor, (grupo.formas.get(valor) ?? 0) + 1);
+      grupos.set(chave, grupo);
+    }
   }
-  return [...contagem.entries()]
-    .map(([nome, total]) => ({ nome, total }))
+  const nomeDe = (formas) => [...formas.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0];
+  return [...grupos.values()]
+    .map((g) => ({ nome: nomeDe(g.formas), total: g.total }))
     .sort((a, b) => b.total - a.total || a.nome.localeCompare(b.nome))
     .slice(0, n);
 }

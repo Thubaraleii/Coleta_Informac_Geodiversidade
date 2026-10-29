@@ -1,4 +1,4 @@
-import { makeEstudo } from '../schema.js';
+import { makeEstudo, registroValido } from '../schema.js';
 import { dividir, semBom } from './csv.js';
 
 function limparLatex(v) {
@@ -39,20 +39,26 @@ function lerCampos(corpo) {
   return campos;
 }
 
+const TIPOS_IGNORADOS = new Set(['string', 'preamble', 'comment']);
+
 export function parseBibtex(texto) {
   const t = semBom(texto);
   const estudos = [];
-  const abertura = /@\w+\s*\{[^,]*,/g;
+  const abertura = /@(\w+)\s*\{/g;
   let m;
   while ((m = abertura.exec(t)) !== null) {
+    const inicio = m.index + m[0].length;
     let nivel = 1;
-    let i = m.index + m[0].indexOf('{') + 1;
+    let i = inicio;
     for (; i < t.length && nivel > 0; i++) {
       if (t[i] === '{') nivel++;
       else if (t[i] === '}') nivel--;
     }
-    const campos = lerCampos(t.slice(m.index + m[0].length, i - 1));
     abertura.lastIndex = i;
+    if (TIPOS_IGNORADOS.has(m[1].toLowerCase())) continue;
+    const interior = t.slice(inicio, i - 1);
+    const virgula = interior.indexOf(',');
+    const campos = lerCampos(virgula >= 0 ? interior.slice(virgula + 1) : '');
     estudos.push(
       makeEstudo(
         {
@@ -69,7 +75,7 @@ export function parseBibtex(texto) {
       ),
     );
   }
-  return estudos;
+  return estudos.filter(registroValido);
 }
 
 export function parseRis(texto) {
@@ -100,5 +106,5 @@ export function parseRis(texto) {
       ),
     );
   }
-  return estudos;
+  return estudos.filter(registroValido);
 }

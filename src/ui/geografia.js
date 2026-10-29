@@ -1,6 +1,6 @@
 import { h, limpar, numero } from './dom.js';
-import { contagemPaises, pontosComCoordenadas } from '../geo.js';
-import { cruzarPaisTema } from '../qualitative.js';
+import { contagemPaises, pontosComCoordenadas, paisesCanonicos } from '../geo.js';
+import { cruzarPaisTema, nomesDoDicionario } from '../qualitative.js';
 import { mapaPaises, mapaPontos, matriz, avisosDaPagina } from './charts.js';
 import { ROTULOS } from './rotulos.js';
 
@@ -21,8 +21,8 @@ export function render(container, ctx) {
   avisosDaPagina(container, ctx);
   if (ctx.filtrados.length === 0) return;
 
-  const afiliacao = contagemPaises(ctx.filtrados.flatMap((e) => e.paises));
-  const estudados = contagemPaises(ctx.codsFiltrados.flatMap((c) => c.paisesEstudados));
+  const afiliacao = contagemPaises(ctx.filtrados.flatMap((e) => paisesCanonicos(e.paises)));
+  const estudados = contagemPaises(ctx.codsFiltrados.flatMap((c) => paisesCanonicos(c.paisesEstudados)));
   const sitios = pontosComCoordenadas(ctx.codsFiltrados, 'sitios');
 
   const mapaAf = h('div');
@@ -37,7 +37,7 @@ export function render(container, ctx) {
   const caixaCruz = h('div');
   function desenharCruzamento() {
     limpar(caixaCruz);
-    matriz(caixaCruz, cruzarPaisTema(ctx.filtrados, ctx.codsFiltrados, campoTema.value));
+    matriz(caixaCruz, cruzarPaisTema(ctx.filtrados, ctx.codsFiltrados, campoTema.value, { colunas: nomesDoDicionario(ctx.categorias, campoTema.value) }));
   }
   desenharCruzamento();
 

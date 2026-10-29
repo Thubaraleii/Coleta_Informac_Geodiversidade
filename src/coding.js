@@ -121,6 +121,14 @@ export const CATEGORIAS_INICIAIS = {
   ],
 };
 
+/** Aplica as definições editadas sobre a lista atual sem perder categorias criadas depois. */
+export function mesclarDescricoes(atuais, editadas) {
+  return atuais.map((c) => {
+    const editada = editadas.find((e) => e.nome === c.nome);
+    return editada ? { ...c, descricao: editada.descricao } : c;
+  });
+}
+
 /** Devolve uma nova lista com `valor` marcado ou desmarcado, sem duplicar nem mutar a original. */
 export function alternarValor(lista, valor, marcado) {
   if (!marcado) return lista.filter((v) => v !== valor);

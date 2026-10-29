@@ -37,6 +37,18 @@ const APELIDOS = {
   'south sudan': 'S. Sudan',
   'dominican republic': 'Dominican Rep.',
   'united republic of tanzania': 'Tanzania',
+  'u arab emirates': 'United Arab Emirates',
+  'bosnia herceg': 'Bosnia and Herz.',
+  'slovak republic': 'Slovakia',
+  'korea republic of': 'South Korea',
+  'iran islamic republic of': 'Iran',
+  'the netherlands': 'Netherlands',
+  swaziland: 'eSwatini',
+  'lao pdr': 'Laos',
+  'lao people s democratic republic': 'Laos',
+  'republic of the congo': 'Congo',
+  'democratic republic congo': 'Dem. Rep. Congo',
+  'democratic republic of congo': 'Dem. Rep. Congo',
 };
 
 function chave(nome) {
@@ -59,6 +71,16 @@ export function normalizarPais(nome) {
   const alvo = APELIDOS[k];
   if (alvo) return atlas ? (atlas.get(chave(alvo)) ?? null) : alvo;
   return atlas ? (atlas.get(k) ?? null) : null;
+}
+
+/** Nomes de país unificados (variações como USA e United States viram um só), sem repetir; o que não é reconhecido fica como veio. */
+export function paisesCanonicos(nomes) {
+  const vistos = [];
+  for (const nome of nomes) {
+    const pais = normalizarPais(nome) ?? String(nome).trim();
+    if (pais && !vistos.includes(pais)) vistos.push(pais);
+  }
+  return vistos;
 }
 
 export function contagemPaises(nomes) {

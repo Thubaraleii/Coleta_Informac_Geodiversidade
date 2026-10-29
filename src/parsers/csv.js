@@ -46,7 +46,8 @@ export function paisesDeAfiliacoes(afiliacoes) {
   const vistos = [];
   for (const af of afiliacoes) {
     const partes = af.split(',').map((s) => s.trim()).filter(Boolean);
-    const pais = partes.length > 1 ? partes[partes.length - 1].replace(/\.$/, '') : '';
+    let pais = partes.length > 1 ? partes[partes.length - 1].replace(/\.$/, '') : '';
+    if (/\bUSA$/i.test(pais)) pais = 'USA';
     if (pais && !vistos.includes(pais)) vistos.push(pais);
   }
   return vistos;

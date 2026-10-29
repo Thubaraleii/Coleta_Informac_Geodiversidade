@@ -1,5 +1,5 @@
 import { h, limpar, numero, adicionar } from './dom.js';
-import { novaCodificacao, alternarValor } from '../coding.js';
+import { novaCodificacao, alternarValor, mesclarDescricoes } from '../coding.js';
 import { normalizarPais } from '../geo.js';
 import { MUNDO } from './mundo.generated.js';
 import { ROTULOS, CAMPOS_COD, CAMPOS_VIEWPOINT } from './rotulos.js';
@@ -183,7 +183,7 @@ export function render(container, ctx) {
       });
       caixa.append(h('div', { class: 'acoes' }, h('button', { type: 'button', class: 'primario', disabled: !acoes.podeEscrever(), onClick: async () => {
         try {
-          const novo = { ...ctx.categorias, [campo]: edits };
+          const novo = { ...ctx.categorias, [campo]: mesclarDescricoes(ctx.categorias[campo] ?? [], edits) };
           await acoes.salvarCategorias(novo);
           ctx.categorias = novo;
           limpar(info).append(h('div', { class: 'chip' }, 'Definições salvas.'));

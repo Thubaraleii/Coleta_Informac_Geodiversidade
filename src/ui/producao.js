@@ -1,6 +1,7 @@
 import { h, limpar, numero } from './dom.js';
 import { producaoPorAno, topContagem, idiomaPorAno, citacoesTotais } from '../metrics.js';
 import { coautoria, coocorrencia } from '../networks.js';
+import { paisesCanonicos } from '../geo.js';
 import { kpis, barras, linhaTempo, barrasEmpilhadas, rede, avisosDaPagina } from './charts.js';
 
 function painel(titulo, desenhar) {
@@ -30,7 +31,8 @@ export function render(container, ctx) {
   if (e.length === 0) return;
   const autoresUnicos = new Set(e.flatMap((x) => x.autores)).size;
   const periodicos = new Set(e.map((x) => x.periodico).filter(Boolean)).size;
-  const paises = new Set(e.flatMap((x) => x.paises)).size;
+  const comPaises = e.map((x) => ({ ...x, paises: paisesCanonicos(x.paises) }));
+  const paises = new Set(comPaises.flatMap((x) => x.paises)).size;
   kpis(container, [
     { valor: e.length, rotulo: 'estudos' },
     { valor: autoresUnicos, rotulo: 'autores' },
@@ -45,7 +47,7 @@ export function render(container, ctx) {
       painel('Autores mais produtivos', (el) => barras(el, topContagem(e, 'autores', 15))),
       painel('Periódicos mais frequentes', (el) => barras(el, topContagem(e, 'periodico', 15))),
       painel('Idiomas', (el) => barras(el, topContagem(e, 'idioma', 10))),
-      painel('Países de afiliação dos autores', (el) => barras(el, topContagem(e, 'paises', 15))),
+      painel('Países de afiliação dos autores', (el) => barras(el, topContagem(comPaises, 'paises', 15))),
     ),
     painel('Idiomas ao longo do tempo', (el) => barrasEmpilhadas(el, idiomaPorAno(e))),
     redeComPeso('Rede de coautoria (autores que publicaram juntos)', (p) => coautoria(e, p), 1, 'peso-coautoria'),

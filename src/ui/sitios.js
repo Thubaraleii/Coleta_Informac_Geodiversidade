@@ -1,5 +1,5 @@
 import { h } from './dom.js';
-import { contagemPorCampo, contagemTemporalidade, cruzar } from '../qualitative.js';
+import { contagemPorCampo, contagemTemporalidade, cruzar, sementeDe } from '../qualitative.js';
 import { barras, matriz, kpis, avisosDaPagina } from './charts.js';
 import { ROTULOS } from './rotulos.js';
 
@@ -30,6 +30,6 @@ export function render(container, ctx) {
       painel(ROTULOS.objeto, (el) => barras(el, contagemPorCampo(cods, 'objeto'))),
       painel(ROTULOS.eixos, (el) => barras(el, contagemPorCampo(cods, 'eixos'))),
     ),
-    painel('Tipo de sítio × eixo temático', (el) => matriz(el, cruzar(cods, 'tiposSitio', 'eixos'))),
+    painel('Tipo de sítio × eixo temático', (el) => matriz(el, cruzar(cods, 'tiposSitio', 'eixos', sementeDe(ctx.categorias, 'tiposSitio', 'eixos')))),
   );
 }

@@ -21,13 +21,22 @@ export function safeId(id) {
   return `h${a}${b}`;
 }
 
-export function empacotar(itens, maxCaracteres) {
+export const PAGINAS_CODIFICACAO = 20;
+
+/** Página (0 a 19) em que uma codificação é gravada, para ler cada página abaixo do limite de 1000 documentos por consulta. */
+export function paginaDe(id, paginas = PAGINAS_CODIFICACAO) {
+  return cyrb53(String(id), 2) % paginas;
+}
+
+const codificador = new TextEncoder();
+
+export function empacotar(itens, maxBytes) {
   const lotes = [];
   let atual = [];
   let tamanho = 0;
   for (const item of itens) {
-    const t = JSON.stringify(item).length + 1;
-    if (atual.length > 0 && tamanho + t > maxCaracteres) {
+    const t = codificador.encode(JSON.stringify(item)).length + 1;
+    if (atual.length > 0 && tamanho + t > maxBytes) {
       lotes.push(atual);
       atual = [];
       tamanho = 0;

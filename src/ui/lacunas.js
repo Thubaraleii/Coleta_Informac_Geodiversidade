@@ -1,5 +1,5 @@
 import { h, limpar, numero } from './dom.js';
-import { cruzar, cruzarPaisTema, limitacoesRecorrentes } from '../qualitative.js';
+import { cruzar, cruzarPaisTema, limitacoesRecorrentes, sementeDe, nomesDoDicionario } from '../qualitative.js';
 import { matriz, avisosDaPagina } from './charts.js';
 import { CAMPOS_CRUZAMENTO } from './rotulos.js';
 
@@ -28,7 +28,7 @@ export function render(container, ctx) {
   const caixaLivre = h('div');
   function desenharLivre() {
     limpar(caixaLivre);
-    matriz(caixaLivre, cruzar(cods, selA.value, selB.value));
+    matriz(caixaLivre, cruzar(cods, selA.value, selB.value, sementeDe(ctx.categorias, selA.value, selB.value)));
   }
   desenharLivre();
 
@@ -37,10 +37,10 @@ export function render(container, ctx) {
   const limitacoes = limitacoesRecorrentes(cods, 10).filter((l) => l.total > 1);
 
   container.append(
-    matrizFixa('Eixo temático × método de avaliação', cruzar(cods, 'eixos', 'metodosAvaliacao')),
-    matrizFixa('Tipo de sítio × aplicação', cruzar(cods, 'tiposSitio', 'aplicacao')),
-    matrizFixa('Problemática × método de avaliação', cruzar(cods, 'problematicas', 'metodosAvaliacao')),
-    matrizFixa('País estudado × eixo temático', cruzarPaisTema(ctx.filtrados, cods, 'eixos')),
+    matrizFixa('Eixo temático × método de avaliação', cruzar(cods, 'eixos', 'metodosAvaliacao', sementeDe(ctx.categorias, 'eixos', 'metodosAvaliacao'))),
+    matrizFixa('Tipo de sítio × aplicação', cruzar(cods, 'tiposSitio', 'aplicacao', sementeDe(ctx.categorias, 'tiposSitio', 'aplicacao'))),
+    matrizFixa('Problemática × método de avaliação', cruzar(cods, 'problematicas', 'metodosAvaliacao', sementeDe(ctx.categorias, 'problematicas', 'metodosAvaliacao'))),
+    matrizFixa('País estudado × eixo temático', cruzarPaisTema(ctx.filtrados, cods, 'eixos', { colunas: nomesDoDicionario(ctx.categorias, 'eixos') })),
     painel('Cruzamento livre', h('div', { class: 'grade' }, h('label', { class: 'campo', for: 'cruz-a' }, 'Linhas', selA), h('label', { class: 'campo', for: 'cruz-b' }, 'Colunas', selB)), caixaLivre),
     painel(
       'Limitações que se repetem nos estudos',

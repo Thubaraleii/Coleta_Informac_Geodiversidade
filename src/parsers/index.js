@@ -19,6 +19,10 @@ const PARSERS = { scopus: parseScopusCsv, wos: parseWosTabDelimited, bibtex: par
 
 export function parseFile(texto, nomeArquivo = '') {
   const format = detectFormat(texto, nomeArquivo);
-  if (!format) throw new Error('Formato não reconhecido');
-  return { format, estudos: PARSERS[format](texto) };
+  if (!format) {
+    throw new Error('Formato não reconhecido. Formatos aceitos: Scopus (CSV), Web of Science (texto delimitado por tabulação), BibTeX e RIS');
+  }
+  const estudos = PARSERS[format](texto);
+  if (estudos.length === 0) throw new Error('Nenhum registro válido encontrado neste arquivo');
+  return { format, estudos };
 }

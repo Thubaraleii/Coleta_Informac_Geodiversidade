@@ -1,5 +1,5 @@
 import { h, limpar } from './dom.js';
-import { contagemPorCampo, cruzar } from '../qualitative.js';
+import { contagemPorCampo, cruzar, sementeDe } from '../qualitative.js';
 import { coocorrencia } from '../networks.js';
 import { barras, matriz, rede, avisosDaPagina } from './charts.js';
 import { ROTULOS } from './rotulos.js';
@@ -26,7 +26,7 @@ export function render(container, ctx) {
         painel(ROTULOS.criteriosAvaliacao, (el) => barras(el, contagemPorCampo(cods, 'criteriosAvaliacao'))),
         painel(ROTULOS.estrategias, (el) => barras(el, contagemPorCampo(cods, 'estrategias'))),
       ),
-      painel('Problemática × método de avaliação', (el) => matriz(el, cruzar(cods, 'problematicas', 'metodosAvaliacao'))),
+      painel('Problemática × método de avaliação', (el) => matriz(el, cruzar(cods, 'problematicas', 'metodosAvaliacao', sementeDe(ctx.categorias, 'problematicas', 'metodosAvaliacao')))),
     );
   }
   const caixa = h('div');

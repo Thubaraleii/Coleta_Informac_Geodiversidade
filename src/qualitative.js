@@ -50,9 +50,20 @@ export function resumoViewpoints(cods) {
   return r;
 }
 
-function matriz(pares) {
-  const linhas = [...new Set(pares.map(([a]) => a))].sort((x, y) => x.localeCompare(y));
-  const colunas = [...new Set(pares.map(([, b]) => b))].sort((x, y) => x.localeCompare(y));
+/** Nomes das categorias do dicionário para um campo (aceita o caminho `viewpoints.<campo>`). */
+export function nomesDoDicionario(categorias, campo) {
+  return (categorias?.[campo.replace(/^viewpoints\./, '')] ?? []).map((c) => c.nome);
+}
+
+/** Sementes de linhas e colunas para um cruzamento, tiradas do dicionário. */
+export function sementeDe(categorias, campoA, campoB) {
+  return { linhas: nomesDoDicionario(categorias, campoA), colunas: nomesDoDicionario(categorias, campoB) };
+}
+
+function matriz(pares, semente = {}) {
+  const ordenar = (lista) => [...new Set(lista)].sort((x, y) => x.localeCompare(y));
+  const linhas = ordenar([...pares.map(([a]) => a), ...(semente.linhas ?? [])]);
+  const colunas = ordenar([...pares.map(([, b]) => b), ...(semente.colunas ?? [])]);
   if (linhas.length === 0 || colunas.length === 0) return { linhas: [], colunas: [], celulas: [], menosEstudadas: [] };
   const celulas = linhas.map(() => colunas.map(() => 0));
   const li = new Map(linhas.map((l, i) => [l, i]));
@@ -70,19 +81,19 @@ function paresDe(cod, listaA, listaB) {
   return pares;
 }
 
-export function cruzar(cods, campoA, campoB) {
+export function cruzar(cods, campoA, campoB, semente = {}) {
   const pares = [];
   for (const c of cods) pares.push(...paresDe(c, listaDe(c, campoA), listaDe(c, campoB)));
-  return matriz(pares);
+  return matriz(pares, semente);
 }
 
-export function cruzarPaisTema(estudos, cods, campo) {
+export function cruzarPaisTema(estudos, cods, campo, semente = {}) {
   const ids = new Set(estudos.map((e) => e.id));
   const pares = [];
   for (const c of cods) {
     if (ids.has(c.estudoId)) pares.push(...paresDe(c, c.paisesEstudados, listaDe(c, campo)));
   }
-  return matriz(pares);
+  return matriz(pares, { colunas: semente.colunas });
 }
 
 export function limitacoesRecorrentes(cods, n) {

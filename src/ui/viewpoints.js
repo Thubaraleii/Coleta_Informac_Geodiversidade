@@ -1,5 +1,5 @@
 import { h, numero } from './dom.js';
-import { contagemPorCampo, resumoViewpoints, cruzar } from '../qualitative.js';
+import { contagemPorCampo, resumoViewpoints, cruzar, sementeDe } from '../qualitative.js';
 import { pontosComCoordenadas } from '../geo.js';
 import { barras, matriz, mapaPontos, kpis, avisosDaPagina } from './charts.js';
 import { ROTULOS, CAMPOS_VIEWPOINT } from './rotulos.js';
@@ -28,9 +28,9 @@ export function render(container, ctx) {
   const pontos = pontosComCoordenadas(usam, 'viewpoints');
   container.append(
     h('div', { class: 'grade' }, CAMPOS_VIEWPOINT.map((c) => painel(ROTULOS[c], (el) => barras(el, contagemPorCampo(usam, `viewpoints.${c}`))))),
-    painel('Tipo de patrimônio × ameaça à integridade visual', (el) => matriz(el, cruzar(usam, 'tiposSitio', 'viewpoints.ameacasVisuais'))),
-    painel('Tipo de patrimônio × aplicação', (el) => matriz(el, cruzar(usam, 'tiposSitio', 'aplicacao'))),
-    painel('Características da paisagem × aplicação', (el) => matriz(el, cruzar(usam, 'viewpoints.caracteristicasPaisagem', 'aplicacao'))),
+    painel('Tipo de patrimônio × ameaça à integridade visual', (el) => matriz(el, cruzar(usam, 'tiposSitio', 'viewpoints.ameacasVisuais', sementeDe(ctx.categorias, 'tiposSitio', 'viewpoints.ameacasVisuais')))),
+    painel('Tipo de patrimônio × aplicação', (el) => matriz(el, cruzar(usam, 'tiposSitio', 'aplicacao', sementeDe(ctx.categorias, 'tiposSitio', 'aplicacao')))),
+    painel('Características da paisagem × aplicação', (el) => matriz(el, cruzar(usam, 'viewpoints.caracteristicasPaisagem', 'aplicacao', sementeDe(ctx.categorias, 'viewpoints.caracteristicasPaisagem', 'aplicacao')))),
     painel('Pontos de observação com coordenadas', (el) => {
       mapaPontos(el, pontos.pontos);
       el.append(h('div', { class: 'legenda' }, `${numero(pontos.pontos.length)} no mapa; ${numero(pontos.semCoordenadas)} pontos sem coordenadas (não posicionados).`));
