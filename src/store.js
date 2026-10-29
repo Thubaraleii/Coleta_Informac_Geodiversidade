@@ -18,6 +18,9 @@ export function memoryAdapter() {
     async remove(nome, id) {
       col(nome).delete(id);
     },
+    async replaceAll(nome, itens) {
+      colecoes.set(nome, new Map(itens.map((i) => [i.id, structuredClone(i.data)])));
+    },
   };
 }
 
@@ -26,6 +29,10 @@ export function createStore(adapter) {
   return {
     listEstudos: () => dados('estudos'),
     async saveEstudos(estudos) {
+      if (adapter.replaceAll) {
+        await adapter.replaceAll('estudos', estudos.map((e) => ({ id: e.id, data: e })));
+        return;
+      }
       for (const e of estudos) await adapter.set('estudos', e.id, e);
     },
     getCodificacoes: () => dados('codificacao'),

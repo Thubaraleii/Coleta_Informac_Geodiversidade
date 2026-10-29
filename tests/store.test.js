@@ -70,3 +70,12 @@ test('cada coleção usa exatamente os nomes do spec', async () => {
     assert.ok((await adapter.list(col)).length >= 1, col);
   }
 });
+
+test('saveEstudos com replaceAll substitui o conjunto completo', async () => {
+  const { store } = novoStore();
+  const a = makeEstudo({ titulo: 'A' }, 'scopus');
+  const b = makeEstudo({ titulo: 'B' }, 'scopus');
+  await store.saveEstudos([a, b]);
+  await store.saveEstudos([a]);
+  assert.deepEqual((await store.listEstudos()).map((e) => e.titulo), ['A']);
+});

@@ -1,3 +1,5 @@
 .superpowers/
 node_modules/
 .claude/
+dist/
+src/ui/mundo.generated.js
