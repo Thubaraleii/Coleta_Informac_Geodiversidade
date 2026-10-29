@@ -1,0 +1,160 @@
+<title>Painel de Geodiversidade</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:wght@600;700&display=swap">
+<style>
+/* Layout: cabeçalho fino, navegação lateral (vira faixa rolável no celular), filtros recolhíveis e área de conteúdo em grade de painéis. */
+:root {
+  --bg: #eef1ef;
+  --surface: #fbfcfb;
+  --surface-2: #e4eae7;
+  --ink: #18221f;
+  --muted: #56635f;
+  --line: #cfd8d4;
+  --accent: #1c6b73;
+  --accent-ink: #ffffff;
+  --accent-soft: #d6ebed;
+  --warn: #8a5200;
+  --warn-soft: #f6e6c8;
+  --bad: #a3341f;
+  --good: #2c7a3f;
+  --s1: #1c6b73;
+  --s2: #b7791f;
+  --s3: #4a6fa5;
+  --s4: #6b8f3a;
+  --s5: #a8472f;
+  --s6: #7b5ea7;
+  --font-titulo: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-dado: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101615; --surface: #172120; --surface-2: #1f2c2a; --ink: #e4ece9; --muted: #9bacA7; --line: #2e3d3a;
+    --accent: #58b9c2; --accent-ink: #06191b; --accent-soft: #17383b; --warn: #e0a84a; --warn-soft: #3a2d12;
+    --bad: #ee8a76; --good: #7cc78e;
+    --s1: #58b9c2; --s2: #e0a84a; --s3: #8fb0e0; --s4: #9cc66b; --s5: #e08c72; --s6: #b79ae0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101615; --surface: #172120; --surface-2: #1f2c2a; --ink: #e4ece9; --muted: #9bacA7; --line: #2e3d3a;
+  --accent: #58b9c2; --accent-ink: #06191b; --accent-soft: #17383b; --warn: #e0a84a; --warn-soft: #3a2d12;
+  --bad: #ee8a76; --good: #7cc78e;
+  --s1: #58b9c2; --s2: #e0a84a; --s3: #8fb0e0; --s4: #9cc66b; --s5: #e08c72; --s6: #b79ae0;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 14px; line-height: 1.5; }
+.app { max-width: 1280px; margin: 0 auto; padding-block: 12px 32px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 12px; }
+header.topo { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 20px; justify-content: space-between; }
+header.topo h1 { font-family: var(--font-titulo); font-size: 22px; line-height: 1.2; margin: 0; letter-spacing: 0; text-wrap: balance; }
+.status { display: flex; flex-wrap: wrap; gap: 8px 14px; color: var(--muted); font-size: 12px; align-items: center; min-width: 0; }
+.barra-codificada { width: 120px; height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+.barra-codificada > i { display: block; height: 100%; background: var(--accent); }
+.corpo { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 16px; align-items: start; }
+nav.paginas { display: grid; gap: 2px; position: sticky; top: env(safe-area-inset-top, 0px); }
+nav.paginas .grupo { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 10px 8px 2px; }
+nav.paginas button { text-align: left; background: none; border: 0; color: var(--ink); padding: 7px 10px; border-radius: 4px; font: inherit; cursor: pointer; }
+nav.paginas button:hover { background: var(--surface-2); }
+nav.paginas button[aria-current="page"] { background: var(--accent); color: var(--accent-ink); font-weight: 500; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+main { min-width: 0; display: grid; gap: 14px; }
+main h2 { font-family: var(--font-titulo); font-size: 20px; margin: 0; text-wrap: balance; }
+main h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+.lead { color: var(--muted); margin: 0; max-width: 70ch; }
+.painel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px; min-width: 0; }
+.grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 14px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; }
+.kpi b { display: block; font-family: var(--font-dado); font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.kpi span { color: var(--muted); font-size: 12px; }
+.chart { position: relative; width: 100%; }
+.vazio { color: var(--muted); padding: 18px 8px; text-align: center; border: 1px dashed var(--line); border-radius: 4px; }
+.aviso { background: var(--warn-soft); color: var(--warn); border-radius: 4px; padding: 8px 12px; font-size: 13px; }
+.filtros { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.filtros > summary { padding: 8px 12px; cursor: pointer; font-weight: 500; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.filtros .conteudo { padding: 4px 12px 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 10px 14px; }
+label.campo { display: grid; gap: 3px; font-size: 12px; color: var(--muted); min-width: 0; }
+input, select, textarea, button { font: inherit; color: var(--ink); }
+input[type=text], input[type=number], input[type=search], select, textarea { background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; min-width: 0; width: 100%; }
+textarea { min-height: 70px; resize: vertical; }
+button.primario { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 4px; padding: 7px 14px; font-weight: 500; cursor: pointer; }
+button.primario:disabled { opacity: .5; cursor: not-allowed; }
+button.sec { background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 6px 12px; cursor: pointer; }
+button.link { background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; text-decoration: underline; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { background: var(--accent-soft); color: var(--ink); border-radius: 10px; padding: 1px 8px; font-size: 12px; display: inline-flex; gap: 4px; align-items: center; }
+.chip button { background: none; border: 0; cursor: pointer; padding: 0 2px; color: var(--muted); }
+.pill { border-radius: 10px; padding: 1px 8px; font-size: 12px; background: var(--surface-2); white-space: nowrap; }
+.pill.ok { background: var(--accent-soft); }
+.pill.pend { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--surface-2); color: var(--bad); }
+.tabela { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--muted); font-size: 12px; position: sticky; top: 0; background: var(--surface); }
+td.num { font-family: var(--font-dado); text-align: right; font-variant-numeric: tabular-nums; }
+tr.clicavel { cursor: pointer; }
+tr.clicavel:hover td, tr.selecionada td { background: var(--accent-soft); }
+.matriz td.cel { text-align: center; font-family: var(--font-dado); min-width: 44px; }
+.matriz td.cel.zero { color: var(--muted); outline: 1px dashed var(--line); outline-offset: -3px; }
+.mapa svg { width: 100%; height: auto; display: block; }
+.mapa path { stroke: var(--bg); stroke-width: .4; }
+.rede svg { width: 100%; height: auto; display: block; }
+.legenda { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 12px; margin-top: 6px; flex-wrap: wrap; }
+.legenda i { display: inline-block; width: 90px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--surface-2), var(--accent)); }
+fieldset { border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; margin: 0; min-width: 0; }
+legend { font-size: 12px; color: var(--muted); padding: 0 4px; }
+.checks { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.checks label { display: inline-flex; gap: 5px; align-items: center; }
+.duas-colunas { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 14px; align-items: start; }
+.linhas { display: grid; gap: 6px; }
+.linha-campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)) auto; gap: 6px; align-items: center; }
+.acoes { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.pilha { display: grid; gap: 10px; }
+dl.criterios { margin: 0; display: grid; gap: 4px; }
+dl.criterios dt { font-weight: 600; }
+dl.criterios dd { margin: 0 0 4px; color: var(--muted); }
+.resumo-txt { white-space: pre-wrap; }
+@media (max-width: 760px) {
+  .corpo { grid-template-columns: minmax(0, 1fr); }
+  nav.paginas { display: flex; overflow-x: auto; position: static; gap: 4px; padding-bottom: 4px; }
+  nav.paginas .grupo { display: none; }
+  nav.paginas button { white-space: nowrap; border: 1px solid var(--line); }
+  .duas-colunas { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<div class="app" id="app">
+  <header class="topo">
+    <h1>Painel de Geodiversidade</h1>
+    <div class="status" id="status" aria-live="polite">Carregando…</div>
+  </header>
+  <div class="corpo">
+    <nav class="paginas" aria-label="Páginas">
+      <div class="grupo">Análise</div>
+      <button data-pagina="producao">Produção e colaboração</button>
+      <button data-pagina="geografia">Geografia</button>
+      <button data-pagina="sitios">Sítios</button>
+      <button data-pagina="problematicas">Problemáticas e métodos</button>
+      <button data-pagina="viewpoints">Pontos de observação</button>
+      <button data-pagina="lacunas">Lacunas</button>
+      <div class="grupo">Fontes</div>
+      <button data-pagina="documental">Documental</button>
+      <button data-pagina="registros">Registros</button>
+      <div class="grupo">Dados</div>
+      <button data-pagina="codificacao">Codificação</button>
+      <button data-pagina="importacao">Importação</button>
+    </nav>
+    <div style="min-width:0;display:grid;gap:12px">
+      <details class="filtros" id="filtros"></details>
+      <main id="conteudo"></main>
+    </div>
+  </div>
+</div>
+
+<script>
+/*__SCRIPT__*/
+</script>
