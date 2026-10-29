@@ -156,6 +156,7 @@ export function render(container, ctx) {
             rascunho.sitios = rascunho.sitios.filter((s) => s.nome.trim() !== '' || s.lat != null);
             rascunho.viewpoints.pontos = rascunho.viewpoints.pontos.filter((p) => p.nome.trim() !== '' || p.lat != null);
             rascunho.evidencias = rascunho.evidencias.filter((e) => e.trecho.trim() !== '');
+            rascunho.atualizadoEm = new Date().toISOString();
             await acoes.salvarCodificacao(rascunho);
             codPorEstudo.set(rascunho.estudoId, structuredClone(rascunho));
             desenharLista();

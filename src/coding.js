@@ -30,6 +30,7 @@ export function novaCodificacao(estudoId) {
     evidencias: [],
     lacuna: '',
     observacao: '',
+    atualizadoEm: null,
   };
 }
 

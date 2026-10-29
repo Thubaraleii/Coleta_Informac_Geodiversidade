@@ -4,6 +4,9 @@ import { aplicarFiltros, filtrosVazios } from '../filters.js';
 import { proporcaoCodificada } from '../coding.js';
 import { setNomesAtlas, paisesCanonicos } from '../geo.js';
 import { importarEstudos } from '../importar.js';
+import { exportarBase, importarBackup } from '../backup.js';
+import { adapterDeKv } from '../kv.js';
+import { kvIndexedDb } from './idb-kv.js';
 import { topContagem } from '../metrics.js';
 import { MUNDO } from './mundo.generated.js';
 import { h, limpar, numero } from './dom.js';
@@ -59,6 +62,13 @@ const acoes = {
   mensagemErro,
   podeEscrever: () => estado.podeEscrever,
   estudos: () => estado.estudos,
+  exportar: () => exportarBase(store),
+  async importarBackup(dados) {
+    const r = await importarBackup(store, dados);
+    await recarregar();
+    desenharStatus();
+    return r;
+  },
   async importar(novos) {
     const r = await importarEstudos(store, novos);
     estado.estudos = r.resultado;
@@ -126,6 +136,7 @@ function desenharStatus() {
     h('span', { class: 'barra-codificada', role: 'img', 'aria-label': `${pct}% codificado` }, h('i', { style: `width:${pct}%` })),
   ];
   if (estado.modo === 'local') partes.push(h('span', { class: 'pill pend' }, 'Modo local: nada é salvo ao fechar'));
+  else if (estado.modo === 'navegador') partes.push(h('span', { class: 'pill ok' }, 'Salvo neste navegador'));
   else if (estado.modo === 'banco') partes.push(h('span', { class: 'pill ok' }, estado.podeEscrever ? 'Banco compartilhado' : 'Somente leitura'));
   if (estado.erroCarga) partes.push(h('span', { class: 'pill bad' }, estado.erroCarga));
   limpar(el).append(...partes);
@@ -246,7 +257,21 @@ function navegar(pagina) {
 }
 
 async function esperarClaude() {
+  // Fora de um iframe (hospedagem estática) não existe runtime do Artifact para esperar.
+  if (window.top === window) return;
   for (let i = 0; i < 15 && !globalThis.claude?.use; i++) await new Promise((r) => setTimeout(r, 100));
+}
+
+async function recarregar() {
+  try {
+    [estado.estudos, estado.cods, estado.categorias, estado.documentos] = await Promise.all([
+      store.listEstudos(), store.getCodificacoes(), store.getCategorias(), store.listDocumentos(),
+    ]);
+    estado.erroCarga = null;
+  } catch (e) {
+    estado.erroCarga = `Erro ao carregar: ${mensagemErro(e)}`;
+    estado.categorias = estado.categorias ?? (await createStore(memoryAdapter()).getCategorias());
+  }
 }
 
 async function iniciar() {
@@ -258,23 +283,21 @@ async function iniciar() {
   await esperarClaude();
   let adapter = null;
   try { adapter = await artifactDbAdapter(); } catch { adapter = null; }
-  estado.modo = adapter ? 'banco' : 'local';
-  store = createStore(adapter ?? memoryAdapter());
+  if (adapter) {
+    estado.modo = 'banco';
+  } else {
+    const kv = await kvIndexedDb();
+    adapter = kv ? adapterDeKv(kv) : memoryAdapter();
+    estado.modo = kv ? 'navegador' : 'local';
+  }
+  store = createStore(adapter);
 
   try {
     const usuario = await globalThis.claude?.use?.('user');
     if (usuario && (await usuario.can('data.write')) === false) estado.podeEscrever = false;
   } catch { /* sem informação de permissão: mantém os campos editáveis */ }
 
-  try {
-    [estado.estudos, estado.cods, estado.categorias, estado.documentos] = await Promise.all([
-      store.listEstudos(), store.getCodificacoes(), store.getCategorias(), store.listDocumentos(),
-    ]);
-  } catch (e) {
-    estado.erroCarga = `Erro ao carregar: ${mensagemErro(e)}`;
-    estado.categorias = (await createStore(memoryAdapter()).getCategorias());
-  }
-
+  await recarregar();
   desenharStatus();
   atualizar();
   const redesenhar = () => atualizar();

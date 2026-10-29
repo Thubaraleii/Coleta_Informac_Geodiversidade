@@ -36,3 +36,27 @@ const html = modelo.replace('/*__SCRIPT__*/', () => script);
 mkdirSync(aqui('dist/'), { recursive: true });
 writeFileSync(aqui('dist/index.html'), html);
 console.log(`dist/index.html gerado (${Math.round(html.length / 1024)} KB)`);
+
+// Versão para hospedagem estática (GitHub Pages): o mesmo conteúdo dentro de uma página HTML completa.
+// Uso: node build.js --pages=index.html,docs/index.html
+const argPages = process.argv.find((a) => a.startsWith('--pages='));
+if (argPages) {
+  const paginaCompleta = `<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>:root{color-scheme:light}body{margin:0;font-size:14px}</style>
+</head>
+<body>
+${html}
+</body>
+</html>
+`;
+  for (const caminho of argPages.slice('--pages='.length).split(',').filter(Boolean)) {
+    const destino = aqui(caminho);
+    mkdirSync(new URL('./', destino), { recursive: true });
+    writeFileSync(destino, paginaCompleta);
+    console.log(`${caminho} gerado (${Math.round(paginaCompleta.length / 1024)} KB)`);
+  }
+}

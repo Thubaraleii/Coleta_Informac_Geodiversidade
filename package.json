@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "build": "node build.js"
+    "build": "node build.js",
+    "build:pages": "node build.js --pages=index.html,docs/index.html"
   },
   "devDependencies": {
     "esbuild": "^0.21.5",
