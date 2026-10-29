@@ -1,0 +1,12 @@
+{
+  "name": "dashboard-geodiversidade",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "world-atlas": "^2.0.2"
+  }
+}
