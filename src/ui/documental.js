@@ -1,4 +1,4 @@
-import { h, limpar, numero } from './dom.js';
+import { h, limpar, numero, adicionar } from './dom.js';
 
 const TIPOS = ['lei', 'decreto', 'portaria', 'resolução', 'norma técnica', 'plano ou programa', 'convenção ou tratado', 'documento institucional', 'outro'];
 const JURISDICOES = ['internacional', 'nacional', 'estadual ou regional', 'municipal', 'institucional'];
@@ -109,7 +109,8 @@ export function render(container, ctx) {
     APLICACOES.map((a) => h('div', { class: 'kpi' }, h('b', null, numero(ctx.documentos.filter((d) => d.aplicacoes.includes(a)).length)), h('span', null, `tratam de ${a}`))),
   );
 
-  container.append(
+  adicionar(
+    container,
     h('h2', null, 'Documental'),
     h('p', { class: 'lead' }, 'Legislações e documentos institucionais ficam numa base própria. Eles não têm DOI, autor nem citações e não entram em nenhuma contagem de produção científica das outras páginas.'),
     ctx.documentos.length > 0 ? resumo : null,

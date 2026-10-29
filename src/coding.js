@@ -121,6 +121,12 @@ export const CATEGORIAS_INICIAIS = {
   ],
 };
 
+/** Devolve uma nova lista com `valor` marcado ou desmarcado, sem duplicar nem mutar a original. */
+export function alternarValor(lista, valor, marcado) {
+  if (!marcado) return lista.filter((v) => v !== valor);
+  return lista.includes(valor) ? [...lista] : [...lista, valor];
+}
+
 export function estudosAtivos(estudos, cods) {
   const excluidos = new Set(cods.filter((c) => c.elegibilidade === 'excluido').map((c) => c.estudoId));
   return estudos.filter((e) => !excluidos.has(e.id));

@@ -71,3 +71,14 @@ test('proporcaoCodificada com codificação ainda pendente não conta como codif
   const estudos = [estudo('A')];
   assert.deepEqual(proporcaoCodificada(estudos, [novaCodificacao(estudos[0].id)]), { codificados: 0, total: 1, pendentes: 1 });
 });
+
+test('alternarValor acumula marcações sucessivas, sem duplicar e sem mutar a lista original', async () => {
+  const { alternarValor } = await import('../src/coding.js');
+  const original = [];
+  const a = alternarValor(original, 'geoturismo', true);
+  const b = alternarValor(a, 'geopatrimônio', true);
+  assert.deepEqual(b, ['geoturismo', 'geopatrimônio']);
+  assert.deepEqual(alternarValor(b, 'geoturismo', true), ['geoturismo', 'geopatrimônio']);
+  assert.deepEqual(alternarValor(b, 'geoturismo', false), ['geopatrimônio']);
+  assert.deepEqual(original, []);
+});

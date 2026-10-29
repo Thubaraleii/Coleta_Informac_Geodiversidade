@@ -21,6 +21,11 @@ export function h(tag, props, ...filhos) {
   return el;
 }
 
+/** Como `pai.append(...)`, mas ignora null, false e listas aninhadas (append(null) escreve "null"). */
+export function adicionar(pai, ...filhos) {
+  anexar(pai, filhos);
+}
+
 export const limpar = (el) => {
   el.replaceChildren();
   return el;

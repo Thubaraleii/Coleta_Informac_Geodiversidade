@@ -1,5 +1,5 @@
-import { h, limpar, numero } from './dom.js';
-import { novaCodificacao } from '../coding.js';
+import { h, limpar, numero, adicionar } from './dom.js';
+import { novaCodificacao, alternarValor } from '../coding.js';
 import { normalizarPais } from '../geo.js';
 import { MUNDO } from './mundo.generated.js';
 import { ROTULOS, CAMPOS_COD, CAMPOS_VIEWPOINT } from './rotulos.js';
@@ -61,7 +61,8 @@ export function render(container, ctx) {
     limpar(infoLista).append(`Mostrando ${Math.min(100, achados.length)} de ${numero(achados.length)} estudos.`);
   }
 
-  function grupoChecks(rotulo, campo, valores, aoMudar) {
+  function grupoChecks(rotulo, campo, ler, aoMudar) {
+    const valores = ler();
     const opcoes = ctx.categorias?.[campo] ?? [];
     const conhecidos = new Set(opcoes.map((o) => o.nome));
     const extras = valores.filter((v) => !conhecidos.has(v)).map((v) => ({ nome: v, descricao: 'Categoria que não está mais no dicionário.' }));
@@ -69,7 +70,7 @@ export function render(container, ctx) {
     return h('fieldset', null,
       h('legend', null, rotulo),
       h('div', { class: 'checks' },
-        [...opcoes, ...extras].map((o) => h('label', { title: o.descricao }, h('input', { type: 'checkbox', checked: valores.includes(o.nome), onChange: (ev) => { const set = new Set(valores); if (ev.target.checked) set.add(o.nome); else set.delete(o.nome); aoMudar([...set]); } }), o.nome)),
+        [...opcoes, ...extras].map((o) => h('label', { title: o.descricao }, h('input', { type: 'checkbox', checked: valores.includes(o.nome), onChange: (ev) => aoMudar(alternarValor(ler(), o.nome, ev.target.checked)) }), o.nome)),
       ),
       h('div', { class: 'linha-campos', style: 'margin-top:6px' }, novo, h('button', { type: 'button', class: 'sec', disabled: !acoes.podeEscrever(), onClick: async () => {
         const nome = novo.value.trim();
@@ -78,7 +79,7 @@ export function render(container, ctx) {
         try {
           await acoes.salvarCategorias({ ...ctx.categorias, [campo]: [...(ctx.categorias[campo] ?? []), { nome, descricao: 'Definição a registrar.' }] });
           ctx.categorias = { ...ctx.categorias, [campo]: [...(ctx.categorias[campo] ?? []), { nome, descricao: 'Definição a registrar.' }] };
-          aoMudar([...valores, nome]);
+          aoMudar(alternarValor(ler(), nome, true));
           desenharFormulario();
         } catch (e) { mensagem(`Não foi possível salvar a categoria: ${acoes.mensagemErro(e)}`, true); }
       } }, 'Adicionar')),
@@ -118,26 +119,27 @@ export function render(container, ctx) {
     }
     const estudo = ctx.estudos.find((e) => e.id === rascunho.estudoId);
     const vp = rascunho.viewpoints;
-    formulario.append(
+    adicionar(
+      formulario,
       h('div', null, h('b', null, estudo?.titulo ?? rascunho.estudoId), h('div', { class: 'legenda' }, [estudo?.autores.slice(0, 3).join('; '), estudo?.ano].filter(Boolean).join(' · '), estudo?.doi ? [' · ', h('a', { href: `https://doi.org/${estudo.doi}`, target: '_blank', rel: 'noopener noreferrer' }, 'abrir fonte')] : null)),
       estudo?.resumo ? h('details', null, h('summary', null, 'Resumo do estudo'), h('div', { class: 'resumo-txt' }, estudo.resumo)) : null,
       h('div', { class: 'grade' },
         h('label', { class: 'campo', for: 'cod-eleg' }, 'Elegibilidade', h('select', { id: 'cod-eleg', value: rascunho.elegibilidade, onChange: (ev) => { rascunho.elegibilidade = ev.target.value; desenharFormulario(); } }, [['pendente', 'Pendente'], ['incluido', 'Incluído'], ['excluido', 'Excluído']].map(([v, r]) => h('option', { value: v }, r)))),
         rascunho.elegibilidade === 'excluido' ? h('label', { class: 'campo', for: 'cod-motivo' }, 'Motivo da exclusão', h('input', { type: 'text', id: 'cod-motivo', value: rascunho.motivoExclusao, onChange: (ev) => { rascunho.motivoExclusao = ev.target.value; } })) : null,
       ),
-      grupoChecks(ROTULOS.eixos, 'eixos', rascunho.eixos, (v) => { rascunho.eixos = v; }),
+      grupoChecks(ROTULOS.eixos, 'eixos', () => rascunho.eixos, (v) => { rascunho.eixos = v; }),
       h('label', { class: 'campo', for: 'cod-paises' }, 'Países onde os sítios foram estudados (separe por vírgula)',
         h('input', { type: 'text', id: 'cod-paises', list: 'lista-paises', value: rascunho.paisesEstudados.join(', '), onChange: (ev) => { rascunho.paisesEstudados = ev.target.value.split(',').map((p) => p.trim()).filter(Boolean).map((p) => normalizarPais(p) ?? p); ev.target.value = rascunho.paisesEstudados.join(', '); } }),
         h('datalist', { id: 'lista-paises' }, MUNDO.map((p) => h('option', { value: p.nome })))),
-      grupoChecks(ROTULOS.tiposSitio, 'tiposSitio', rascunho.tiposSitio, (v) => { rascunho.tiposSitio = v; }),
+      grupoChecks(ROTULOS.tiposSitio, 'tiposSitio', () => rascunho.tiposSitio, (v) => { rascunho.tiposSitio = v; }),
       h('label', { class: 'campo', for: 'cod-temporal' }, 'Natureza temporal dos elementos', h('select', { id: 'cod-temporal', value: rascunho.temporalidade ?? '', onChange: (ev) => { rascunho.temporalidade = ev.target.value || null; } }, TEMPORALIDADES.map(([v, r]) => h('option', { value: v }, r)))),
-      ...CAMPOS_COD.filter((c) => c !== 'eixos' && c !== 'tiposSitio').map((c) => grupoChecks(ROTULOS[c], c, rascunho[c], (v) => { rascunho[c] = v; })),
+      ...CAMPOS_COD.filter((c) => c !== 'eixos' && c !== 'tiposSitio').map((c) => grupoChecks(ROTULOS[c], c, () => rascunho[c], (v) => { rascunho[c] = v; })),
       h('fieldset', null, h('legend', null, 'Sítios estudados (coordenadas opcionais)'), linhasEditaveis(rascunho.sitios, [{ chave: 'nome', rotulo: 'Nome do sítio' }, { chave: 'lat', rotulo: 'Latitude', tipo: 'number' }, { chave: 'lng', rotulo: 'Longitude', tipo: 'number' }], () => ({ nome: '', lat: null, lng: null }))),
       h('fieldset', null,
         h('legend', null, 'Pontos de observação (viewpoints)'),
         h('div', { class: 'pilha' },
           h('label', { class: 'campo', for: 'cod-vp' }, 'O estudo usa pontos de observação?', h('select', { id: 'cod-vp', value: vp.usa === null ? '' : vp.usa ? 'sim' : 'nao', onChange: (ev) => { vp.usa = ev.target.value === '' ? null : ev.target.value === 'sim'; } }, [['', 'Sem informação'], ['sim', 'Sim'], ['nao', 'Não']].map(([v, r]) => h('option', { value: v }, r)))),
-          ...CAMPOS_VIEWPOINT.map((c) => grupoChecks(ROTULOS[c], c, vp[c], (v) => { vp[c] = v; })),
+          ...CAMPOS_VIEWPOINT.map((c) => grupoChecks(ROTULOS[c], c, () => vp[c], (v) => { vp[c] = v; })),
           h('div', null, h('b', null, 'Pontos com coordenadas'), linhasEditaveis(vp.pontos, [{ chave: 'nome', rotulo: 'Nome do ponto' }, { chave: 'lat', rotulo: 'Latitude', tipo: 'number' }, { chave: 'lng', rotulo: 'Longitude', tipo: 'number' }], () => ({ nome: '', lat: null, lng: null }))),
         ),
       ),

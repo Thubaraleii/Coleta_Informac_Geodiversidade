@@ -56,6 +56,7 @@ function mensagemErro(e) {
 const acoes = {
   mensagemErro,
   podeEscrever: () => estado.podeEscrever,
+  estudos: () => estado.estudos,
   modo: () => estado.modo,
   async salvarEstudos(lista) {
     await store.saveEstudos(lista);

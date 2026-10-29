@@ -1,4 +1,4 @@
-import { h, limpar, numero } from './dom.js';
+import { h, limpar, numero, adicionar } from './dom.js';
 import { parseFile } from '../parsers/index.js';
 import { mergeEstudos } from '../dedupe.js';
 
@@ -23,6 +23,7 @@ export function render(container, ctx) {
   const input = h('input', { type: 'file', id: 'arquivos', multiple: true, accept: '.csv,.txt,.tsv,.bib,.ris' });
   const botao = h('button', { class: 'primario', type: 'button', disabled: !acoes.podeEscrever() }, 'Importar arquivos');
   const linha = (texto, tipo) => h('div', { class: tipo === 'bad' ? 'aviso' : 'painel' }, texto);
+  let atualizarBase = () => {};
 
   botao.addEventListener('click', async () => {
     const arquivos = [...input.files];
@@ -32,7 +33,7 @@ export function render(container, ctx) {
       return;
     }
     botao.disabled = true;
-    let atual = ctx.estudos;
+    let atual = acoes.estudos();
     let mudou = false;
     for (const arquivo of arquivos) {
       try {
@@ -55,15 +56,21 @@ export function render(container, ctx) {
     } else {
       saida.append(linha('Nenhum estudo novo; a base ficou como estava.', 'ok'));
     }
+    atualizarBase();
     botao.disabled = !acoes.podeEscrever();
   });
 
-  container.append(
+  const caixaBase = h('div');
+  adicionar(
+    container,
     h('h2', null, 'Importação'),
     h('p', { class: 'lead' }, 'Envie exportações da Scopus (CSV), da Web of Science (texto delimitado por tabulação), BibTeX ou RIS. Duplicatas por DOI ou título são unidas e as bases de origem ficam registradas. O arquivo não é guardado, só os registros convertidos. A codificação já feita não muda.'),
     acoes.podeEscrever() ? null : h('div', { class: 'aviso' }, 'Seu acesso é somente leitura: a importação está desativada.'),
     acoes.modo() === 'local' ? h('div', { class: 'aviso' }, 'Modo local: a base existe só nesta aba e some ao fechar a página.') : null,
     h('div', { class: 'painel pilha' }, h('label', { class: 'campo', for: 'arquivos' }, 'Arquivos de exportação', input), h('div', { class: 'acoes' }, botao), saida),
-    h('div', { class: 'painel' }, h('h3', null, 'Base atual'), resumoDaBase(ctx.estudos)),
+    h('div', { class: 'painel' }, h('h3', null, 'Base atual'), caixaBase),
   );
+  const desenharBase = () => limpar(caixaBase).append(resumoDaBase(acoes.estudos()));
+  desenharBase();
+  atualizarBase = desenharBase;
 }
